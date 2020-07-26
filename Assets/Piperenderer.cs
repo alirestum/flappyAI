@@ -6,8 +6,9 @@ public class Piperenderer : MonoBehaviour
 {
     private List<GameObject> pipes = new List<GameObject>();
     public GameObject pipePrefab;
-    public float speed = 0.1f;
+    private float speed = 0.1f;
     private System.Random random = new System.Random();
+    private Piperenderer _instance;
     public float Speed
     {
         get { return speed; }
@@ -20,7 +21,15 @@ public class Piperenderer : MonoBehaviour
             }
         }
     }
-   
+
+    private void Awake()
+    {
+        if (_instance == null)
+        {
+            this._instance = this.GetComponent<Piperenderer>();
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -44,10 +53,10 @@ public class Piperenderer : MonoBehaviour
         if (pipes.Count < 6)
         {
             Vector3 currentPos = pipes[pipes.Count-1].gameObject.transform.position;
-            currentPos.x += 5.0f;
+            currentPos.x += 6.0f;
             currentPos.y = generateYCoord();
             GameObject newPipe = Instantiate(pipePrefab, currentPos, Quaternion.identity);
-            //newPipe.transform.parent = gameObject.transform;
+            newPipe.transform.SetParent(_instance.transform);
             newPipe.GetComponent<Pipe>().onBecameInvisible += removePipe;
             newPipe.GetComponent<Pipe>().speed = speed;
             pipes.Add(newPipe);
@@ -79,15 +88,28 @@ public class Piperenderer : MonoBehaviour
 
     private void generateInitialPipes()
     {
-        float spacing = 5;
+        float spacing = 6;
         for (int i = 0; i < 6; i++)
         {
             Vector3 pos = new Vector3(spacing * i, generateYCoord(), 0);
             GameObject newPipe = Instantiate(pipePrefab, pos, Quaternion.identity);
-            newPipe.transform.parent = gameObject.transform;
+            newPipe.transform.SetParent(_instance.transform);
             newPipe.GetComponent<Pipe>().onBecameInvisible += removePipe;
             newPipe.GetComponent<Pipe>().speed = speed;
             pipes.Add(newPipe);
         }
+    }
+
+    public double getDistanceToClosestPipe(Vector3 BirdPosition)
+    {
+        foreach (GameObject pipe in pipes)
+        {
+            if (pipe.transform.position.x > BirdPosition.x)
+            {
+                return Vector3.Distance(BirdPosition, pipe.transform.position);
+            }
+        }
+
+        return 0;
     }
 }

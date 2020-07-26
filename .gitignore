@@ -1,3 +1,6 @@
+#Ignore IDE specific folder
+.idea/
+
 #Ignore web build folder
 webbuild/
 
