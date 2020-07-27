@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Mail;
+using GeneticAlgorithm;
 using UnityEngine;
 
 public class Piperenderer : MonoBehaviour
@@ -9,6 +11,12 @@ public class Piperenderer : MonoBehaviour
     private float speed = 0.1f;
     private System.Random random = new System.Random();
     private Piperenderer _instance;
+
+    public float TravelDistance
+    {
+        get;
+        private set;
+    }
     public float Speed
     {
         get { return speed; }
@@ -33,15 +41,13 @@ public class Piperenderer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         generateInitialPipes();
-
     }
 
     // Update is called once per frame
     void Update()
     {
-       
+        TravelDistance += speed;
         if (Input.GetKeyDown(KeyCode.A))
         {
             Speed += 0.1f;
@@ -62,12 +68,9 @@ public class Piperenderer : MonoBehaviour
             pipes.Add(newPipe);
         }
     }
-
-    void removePipe()
+    void removePipe(Pipe pipe)
     {
-        
-        Destroy(pipes[0].gameObject);
-        pipes.RemoveAt(0);
+        EventExecutors.RemovePipe(pipe, pipes);
         addnewPipe();
     }
 

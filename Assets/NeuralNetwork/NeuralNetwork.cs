@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace NN
 {
-    class NeuralNetwork
+    public class NeuralNetwork
     {
         public List<LayerDense> HiddenLayers
         {
@@ -37,13 +37,9 @@ namespace NN
             HiddenLayers[0].Forward(input);
             HiddenLayers[1].Forward(HiddenLayers[0].Output);
             OutputLayer.Forward(HiddenLayers[1].Output);
-            Console.WriteLine(OutputLayer.Output);
             //If the first then jump, if the second then not
-            Debug.Log(Math.Abs(1 - OutputLayer.Output[0,0]));
-            Debug.Log(Math.Abs(1 - OutputLayer.Output[0,1]));
             if (Math.Abs(1 - OutputLayer.Output[0,0]) < Math.Abs(1 - OutputLayer.Output[0,1]))
             {
-                Debug.Log("kene ugrani");
                 return true;
             }
 

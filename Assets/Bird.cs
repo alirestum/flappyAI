@@ -4,7 +4,7 @@ using MathNet.Numerics.LinearAlgebra.Double;
 using UnityEngine;
 using NN;
 
-public delegate void onHit(Collision2D collision, Bird bird);
+public delegate void onHit(Bird bird);
 
 public delegate void onBecomeInvisible(Bird bird);
 public class Bird : MonoBehaviour
@@ -16,11 +16,20 @@ public class Bird : MonoBehaviour
     }
     public event onHit onHit;
     public event onBecomeInvisible onBecomeInvisible;
-    private NeuralNetwork Brain;
+
+    public NeuralNetwork Brain
+    {
+        get;
+        set;
+    }
     private int _frames;
     private Matrix<double> inputMatrix;
-    private bool dead;
 
+    public float TravelledDistance
+    {
+        get;
+        set;
+    }
     public Piperenderer PiperendererInstance
     {
         get;
@@ -36,7 +45,7 @@ public class Bird : MonoBehaviour
     public bool Dead
     {
         get;
-        private set;
+        set;
     }
 
     private void Awake()
@@ -50,11 +59,6 @@ public class Bird : MonoBehaviour
         Dead = false;
         inputMatrix = new DenseMatrix(3,3);
         this._frames = 0;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
     }
 
     // Update is called once per frame
@@ -75,7 +79,6 @@ public class Bird : MonoBehaviour
         if (_frames == 3)
         {
             _frames = 0;
-           Debug.Log("ittvok");
             if (this.Brain.Think(inputMatrix))
             {
                 float currentVelocityY = this._rigidbody2d.velocity.y;
@@ -95,8 +98,11 @@ public class Bird : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Dead = true;
-        onHit?.Invoke(collision, this);
+        if (!Dead)
+        {
+            Dead = true;
+            onHit?.Invoke(this);
+        }
     }
 
     public void resetBird()
@@ -112,6 +118,10 @@ public class Bird : MonoBehaviour
 
     private void OnBecameInvisible()
     {
-        onBecomeInvisible?.Invoke(this);
+        if (!Dead)
+        {
+            Dead = true;
+            onBecomeInvisible?.Invoke(this);
+        }
     }
 }

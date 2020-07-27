@@ -1,14 +1,12 @@
 ﻿using System;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using UnityEngine;
 using Random = System.Random;
-using Vector = MathNet.Numerics.LinearAlgebra.Complex32.Vector;
 
 namespace NN
 {
 
-    class LayerDense
+    public class LayerDense
     {
         public Matrix<double> Weights
         {
@@ -27,7 +25,7 @@ namespace NN
 
         private static Random rnd = new Random();
         //Random double numbers for the weight init process.
-        private Func<int, int, double> weightInitializer = (row, column) => rnd.NextDouble() * 0.1;
+        private Func<int, int, double> weightInitializer = (row, column) => rnd.NextDouble() * 0.2;
         //Random double numbers for the weight init process.
         private Func<int, double> biasInititializer = (item) => rnd.Next();
 
