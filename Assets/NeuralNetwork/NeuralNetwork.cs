@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
-using UnityEngine;
 
 namespace NN
 {
@@ -20,11 +19,12 @@ namespace NN
         public LayerDense OutputLayer
         {
             get;
+            set;
         }
 
         public NeuralNetwork()
         {
-            InputLayer = new LayerDense(3, 3);
+            InputLayer = new LayerDense( 3, 3);
             HiddenLayers = new List<LayerDense>();
             HiddenLayers.Add(new LayerDense(3,5));
             HiddenLayers.Add(new LayerDense(5,5));
@@ -33,7 +33,6 @@ namespace NN
 
         public bool Think(Matrix<double> input)
         {
-            //InputLayer.Forward(input);
             HiddenLayers[0].Forward(input);
             HiddenLayers[1].Forward(HiddenLayers[0].Output);
             OutputLayer.Forward(HiddenLayers[1].Output);

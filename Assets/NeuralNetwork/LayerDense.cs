@@ -11,10 +11,12 @@ namespace NN
         public Matrix<double> Weights
         {
             get;
+            set;
         }
         public Vector<double> Biases
         {
             get;
+            set;
         }
 
         public Matrix<double> Output

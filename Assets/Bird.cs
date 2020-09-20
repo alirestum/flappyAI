@@ -3,62 +3,67 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using UnityEngine;
 using NN;
+using UnityEditor;
 
 public delegate void onHit(Bird bird);
 
 public delegate void onBecomeInvisible(Bird bird);
 public class Bird : MonoBehaviour
 {
-    public Rigidbody2D _rigidbody2d
+    #region variables
+    public event onHit onHit;
+    public event onBecomeInvisible onBecomeInvisible;
+    public Rigidbody2D Rigidbody2d
     {
         get;
         private set;
     }
-    public event onHit onHit;
-    public event onBecomeInvisible onBecomeInvisible;
-
     public NeuralNetwork Brain
     {
         get;
         set;
     }
-    private int _frames;
     private Matrix<double> inputMatrix;
-
-    public float TravelledDistance
-    {
-        get;
-        set;
-    }
     public Piperenderer PiperendererInstance
     {
         get;
         set;
     }
-
     public Bird Instance
     {
         get;
         set;
     }
-
     public bool Dead
     {
         get;
         set;
     }
 
+    public int Fittness
+    {
+        get;
+        private set;
+    }
+    private int frameCnt = 0;
+    #endregion
+
+    public bool DebugNeeded
+    {
+        get;
+        set;
+    }
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = GetComponent<Bird>();
         }
-        _rigidbody2d = GetComponent<Rigidbody2D>();
+
+        Rigidbody2d = GetComponent<Rigidbody2D>();
         Brain = new NeuralNetwork();
         Dead = false;
         inputMatrix = new DenseMatrix(3,3);
-        this._frames = 0;
     }
 
     // Update is called once per frame
@@ -66,22 +71,24 @@ public class Bird : MonoBehaviour
     {
         if (!Dead)
         {
+            /*Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, PiperendererInstance.getClosestPipe().Bottom.GetComponent<SpriteRenderer>().bounds.max);
+                Gizmos.DrawLine(transform.position, PiperendererInstance.getClosestPipe().Top.GetComponent<SpriteRenderer>().bounds.min);*/
             Think();
         }
     }
 
     private void Think()
     {
-        inputMatrix[_frames, 0] = this._rigidbody2d.velocity.y;
-        inputMatrix[_frames, 1] = this.transform.position.y;
-        inputMatrix[_frames, 2] = PiperendererInstance.getDistanceToClosestPipe(this.transform.position);
-        _frames++;
-        if (_frames == 3)
+        inputMatrix[frameCnt % 3, 0] = transform.position.y;
+        inputMatrix[frameCnt % 3, 1] = Vector3.Distance(transform.position,PiperendererInstance.getClosestPipe().Top.GetComponent<SpriteRenderer>().bounds.min);
+        inputMatrix[frameCnt % 3, 2] = Vector3.Distance(transform.position,PiperendererInstance.getClosestPipe().Bottom.GetComponent<SpriteRenderer>().bounds.max);
+        frameCnt++;
+        if (frameCnt % 3 == 0)
         {
-            _frames = 0;
             if (this.Brain.Think(inputMatrix))
             {
-                float currentVelocityY = this._rigidbody2d.velocity.y;
+                float currentVelocityY = this.Rigidbody2d.velocity.y;
                 jump(currentVelocityY);
             }
         }
@@ -92,7 +99,7 @@ public class Bird : MonoBehaviour
     {
         if (currentVelocityY < 10)
         {
-            this._rigidbody2d.AddForce(new Vector2(0.0f, 10.0f - currentVelocityY), ForceMode2D.Impulse);
+            this.Rigidbody2d.AddForce(new Vector2(0.0f, 10.0f - currentVelocityY), ForceMode2D.Impulse);
         }
     }
 
@@ -101,19 +108,9 @@ public class Bird : MonoBehaviour
         if (!Dead)
         {
             Dead = true;
+            Fittness = frameCnt;
             onHit?.Invoke(this);
         }
-    }
-
-    public void resetBird()
-    {
-
-        Dead = false;
-        Instance.Brain = new NeuralNetwork();
-        transform.position = new Vector3(-7.5f, 1.0f, 0.0f);
-        transform.rotation = Quaternion.identity;
-        _rigidbody2d.constraints = RigidbodyConstraints2D.FreezeRotation;
-        _rigidbody2d.constraints = RigidbodyConstraints2D.FreezePositionX;
     }
 
     private void OnBecameInvisible()
@@ -121,6 +118,7 @@ public class Bird : MonoBehaviour
         if (!Dead)
         {
             Dead = true;
+            Fittness = frameCnt;
             onBecomeInvisible?.Invoke(this);
         }
     }
