@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Transactions;
-using Bolt;
-using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using UnityEngine;
 
@@ -102,92 +100,50 @@ namespace GeneticAlgorithm
             List<Bird> parents = selectParents();
             System.Random random = new System.Random();
             PopulationMembers.Clear();
+
             for (int i = 0; i < PopulationSize; i++)
             {
-                GameObject newBird = GameObject.Instantiate(Bird, new Vector3(-7.5f, 1.0f, 0.0f), Quaternion.identity);;
-                Bird newBirdInstance = newBird.GetComponent<Bird>();
-                newBirdInstance.onBecomeInvisible += BirdDeath;
-                newBirdInstance.onHit += BirdDeath;
-                newBirdInstance.PiperendererInstance = piperendererInstance;
-                
-                //HiddenLayer#1
-                newBirdInstance.Brain.HiddenLayers[0].Weights = (parents[0].Brain.HiddenLayers[0].Weights
-                    + parents[1].Brain.HiddenLayers[0].Weights) / 2;
-                newBirdInstance.Brain.HiddenLayers[0].Biases = parents[random.Next(0, 1)].Brain.HiddenLayers[0].Biases;
-                
-                //HiddenLayer#2
-                newBirdInstance.Brain.HiddenLayers[1].Weights = (parents[0].Brain.HiddenLayers[1].Weights 
-                    + parents[1].Brain.HiddenLayers[1].Weights) / 2;
-                newBirdInstance.Brain.HiddenLayers[1].Biases = parents[random.Next(0, 1)].Brain.HiddenLayers[1].Biases;
+                GameObject newChild = GameObject.Instantiate(Bird, new Vector3(-7.5f, 1.0f, 0.0f), Quaternion.identity);
+                Bird newChildInstance = newChild.GetComponent<Bird>();
+                newChildInstance.onBecomeInvisible += BirdDeath;
+                newChildInstance.onHit += BirdDeath;
+                newChildInstance.PiperendererInstance = piperendererInstance;
 
-                //OutpuLayer
-                newBirdInstance.Brain.OutputLayer.Weights =
-                    (parents[0].Brain.OutputLayer.Weights + parents[1].Brain.OutputLayer.Weights) / 2;
-                newBirdInstance.Brain.OutputLayer.Biases = parents[random.Next(0, 1)].Brain.OutputLayer.Biases;
+                Matrix<double> crossedHiddenLayer1 = parents[0].Brain.HiddenLayers[0].Weights +
+                                                     random.NextDouble() * (parents[1].Brain.HiddenLayers[0].Weights -
+                                                      parents[0].Brain.HiddenLayers[0].Weights);
                 
-                PopulationMembers.Add(newBird, newBirdInstance);
+                Matrix<double> crossedHiddenLayer2 = parents[0].Brain.HiddenLayers[1].Weights +
+                                                     random.NextDouble() * (parents[1].Brain.HiddenLayers[1].Weights -
+                                                                            parents[0].Brain.HiddenLayers[1].Weights);
+
+                Matrix<double> crossedOutputLayer = parents[0].Brain.OutputLayer.Weights +
+                                                    random.NextDouble() * (parents[1].Brain.OutputLayer.Weights -
+                                                                           parents[0].Brain.OutputLayer.Weights);
+
+                newChildInstance.Brain.HiddenLayers[0].Weights = crossedHiddenLayer1;
+                newChildInstance.Brain.HiddenLayers[1].Weights = crossedHiddenLayer2;
+                newChildInstance.Brain.OutputLayer.Weights = crossedOutputLayer; 
+                PopulationMembers.Add(newChild, newChildInstance);
             }
-            
-            /*for (int i = 0; i < PopulationSize; i++)
+        }
+
+        private void mutation()
+        {
+            System.Random random = new System.Random();
+            foreach (Bird bird in PopulationMembers.Values)
             {
-                for (int j = 0; j < 2; j++)
-                {
-                    for (int k = 0; k < parents[0].Brain.HiddenLayers[j].Weights.RowCount; k++)
-                    {
-                        for (int l = 0; l < parents[0].Brain.HiddenLayers[j].Weights.ColumnCount; l++)
-                        {
-                            if (random.Next(0,2) == 0)
-                            {
-                                double temp = parents[0].Brain.HiddenLayers[j].Weights[k,l];
-                                parents[0].Brain.HiddenLayers[j].Weights[k, l] =
-                                    parents[1].Brain.HiddenLayers[j].Weights[k, l];
-                                parents[0].Brain.HiddenLayers[j].Weights[k, l] = temp;
-                            }
-                        }
-                    }
-                  
-                }
-                
-                GameObject newBird = GameObject.Instantiate(Bird, new Vector3(-7.5f, 1.0f, 0.0f), Quaternion.identity);;
-                Bird newBirdInstance = newBird.GetComponent<Bird>();
-                newBirdInstance.onBecomeInvisible += BirdDeath;
-                newBirdInstance.onHit += BirdDeath;
-                newBirdInstance.PiperendererInstance = piperendererInstance;
-                if (i.IsEven())
-                {
-                    //Debug.Log(parents[0].Brain.HiddenLayers[0].Weights.ToArray());
-                    newBirdInstance.Brain.HiddenLayers[0].Weights =
-                        DenseMatrix.OfArray(parents[0].Brain.HiddenLayers[0].Weights.ToArray());
-                    newBirdInstance.Brain.HiddenLayers[1].Weights = DenseMatrix.OfArray(parents[0].Brain.HiddenLayers[1].Weights.ToArray());
-                }
-                else
-                {
-                    newBirdInstance.Brain.HiddenLayers[0].Weights = DenseMatrix.OfArray(parents[1].Brain.HiddenLayers[0].Weights.ToArray());
-                    newBirdInstance.Brain.HiddenLayers[1].Weights = DenseMatrix.OfArray(parents[1].Brain.HiddenLayers[1].Weights.ToArray());
-                }
-                PopulationMembers.Add(newBird, newBirdInstance);
-                
-                /*GameObject newBird = GameObject.Instantiate(Bird, new Vector3(-7.5f, 1.0f, 0.0f), Quaternion.identity);;
-               Bird newBirdInstance = newBird.GetComponent<Bird>();
-               newBirdInstance.onBecomeInvisible += BirdDeath;
-               newBirdInstance.onHit += BirdDeath;
-               newBirdInstance.PiperendererInstance = piperendererInstance;
-               if (i.IsEven())
-               {
-                   newBirdInstance.Brain = parents[0].GetComponent<Bird>().Brain;
-               }
-               else
-               {
-                   newBirdInstance.Brain = parents[1].GetComponent<Bird>().Brain;
-               }
-               PopulationMembers.Add(newBird, newBirdInstance);#1#
-            }*/
+                bird.Brain.HiddenLayers[0].Weights.Multiply(random.NextDouble());
+                bird.Brain.HiddenLayers[1].Weights.Multiply(random.NextDouble());
+                bird.Brain.OutputLayer.Weights.Multiply(random.NextDouble());
+            }
         }
 
         public void DoGeneration()
         {
             piperendererInstance.resetPiperenderer();
             crossover();
+            mutation();
             DeadCounter = 0;
             NewGenerationIsReady?.Invoke();
         }
